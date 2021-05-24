@@ -47,8 +47,8 @@ class HH_OLH_degree:
         Returns:
         List of countious starting with the first value of 
         """
-        start_date = dates[0]
-        end_date = dates[-1]
+        start_date = old_dates[0]
+        end_date = old_dates[-1]
         all_dates = pd.date_range(start = start_date, end = end_date).to_pydatetime().tolist()
         return [(date.date()) for date in all_dates]
     
