@@ -62,6 +62,7 @@ def plot_estimates_flat(number_of_queries, N, model, epsilon, dates, counts, ran
     
     return answers
 
+#Getting all error values from dict
 def dict_error_plot_epsilons(dic, plotname, epsilons):
     n = len(dic)
     mse_errors = np.zeros(n)
@@ -80,8 +81,8 @@ def dict_error_plot_epsilons(dic, plotname, epsilons):
 
 
     labels_stack = np.vstack((mse_labels,max_labels,abs_labels)).flatten()
-    epsilons_stack = np.vstack((epsilons,epsilons,epsilons)).flatten()
-
+    epsilons_stack = np.tile(epsilons,3)
+    
     seaborn_df = pd.DataFrame({'epsilons':epsilons_stack, 'errors':error_stack,'labels':labels_stack})
     seaborn_df.to_csv(plotname + '_olh_seaborn_plotting_data.csv',index=False)
 
@@ -111,11 +112,17 @@ def dict_error_plot_n(dic, plotname, ns):
 
 
     labels_stack = np.vstack((mse_labels,max_labels,abs_labels)).flatten()
-    n_stack = np.vstack((ns,ns,ns)).flatten()
+    n_stack = np.tile(ns,3)
+    """
+    print('______________')
+    print(np.tile(ns,n-1))
+    print(n_stack)
+    print('______________')
     print(ns)
     print(len(n_stack))
     print(len(error_stack))
     print(len(labels_stack))
+    """
     
     seaborn_df = pd.DataFrame({'N':n_stack, 'errors':error_stack, 'labels':labels_stack})
     seaborn_df.to_csv(plotname + '_olh_seaborn_plotting_data.csv',index=False)
