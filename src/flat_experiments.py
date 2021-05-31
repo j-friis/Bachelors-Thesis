@@ -46,6 +46,7 @@ n_data_structures = 50
 
 epsilons = np.array([2,1.4,1.2,1,0.8,0.6,0.5,0.3])
 n = np.array([32,128,256,512,1024,2048])
+degrees = np.array([2,3,4])
 os.chdir(owd)
 #We have 50 datastruces
 
@@ -114,102 +115,109 @@ n_2048_hh = [item for sublist in n_2048_hh for item in sublist]
 
 for e in epsilons:
     for N in n:
-        csv_name_est_flat = 'results/sample_querys/flat/' + f'est_flat_queries_e={e}_N={N}.csv'
-        csv_name_cor_flat = 'results/sample_querys/flat/' + f'cor_flat_queries_e={e}_N={N}.csv'
+        for degree in degrees:
+            csv_name_est_flat = 'results/sample_querys/flat/' + f'est_flat_queries_e={e}_N={N}_B={degree}.csv'
+            csv_name_cor_flat = 'results/sample_querys/flat/' + f'cor_flat_queries_e={e}_N={N}_B={degree}.csv'
         
-        csv_name_est_hh = 'results/sample_querys/flat/' + f'est_hh_queries_e={e}_N={N}.csv'
-        csv_name_cor_hh = 'results/sample_querys/flat/' + f'cor_hh_queries_e={e}_N={N}.csv'
+            csv_name_est_hh = 'results/sample_querys/flat/' + f'est_hh_queries_e={e}_N={N}_B={degree}.csv'
+            csv_name_cor_hh = 'results/sample_querys/flat/' + f'cor_hh_queries_e={e}_N={N}_B={degree}.csv'
         
-        answers_flat = []
-        correct_answers_flat = []
+            answers_flat = []
+            correct_answers_flat = []
         
-        answers_hh = []
-        correct_answers_hh = []
+            answers_hh = []
+            correct_answers_hh = []
+
+            for i in range(0,n_data_structures):
+                """
+                degree = 4
+                local_HH = HH_OLH_degree(epsilon, degree, all_dates[:], all_counts[:])
+                """
+                FLAT_OLH = OLH_flat(e, all_dates[:N], all_counts[:N])
+
+                if N == 32:
+                    for query in n_32_flat[i]:
+                        dates_split = query.split(', ')
+                        res = tuple(dates_split)
+
+                        est, cor = model_answers(FLAT_OLH, res)
+                        answers_flat.append(est)
+                        correct_answers_flat.append(cor)
+
+                if N == 128:
+                    for query in n_128_flat[i]:
+
+                        dates_split = query.split(', ')
+                        res = tuple(dates_split)
+
+                        est, cor = model_answers(FLAT_OLH, res)
+                        answers_flat.append(est)
+                        correct_answers_flat.append(cor)
+
+
+                if N == 256:
+                    for query in n_32_flat[i]:
+                        dates_split = query.split(', ')
+                        res = tuple(dates_split)
+                        est, cor = model_answers(FLAT_OLH, res)
+                        answers_flat.append(est)
+                        correct_answers_flat.append(cor)             
+
+                if N == 512:
+                    for query in n_512_flat[i]:
+                        dates_split = query.split(', ')
+                        res = tuple(dates_split)
+
+                        est, cor = model_answers(FLAT_OLH, res)
+                        answers_flat.append(est)
+                        correct_answers_flat.append(cor)
+
+                    for query in n_512_hh[i]:
+                        dates_split = query.split(', ')
+                        res = tuple(dates_split)
+
+                        est, cor = model_answers(FLAT_OLH, res)
+                        answers_hh.append(est)
+                        correct_answers_hh.append(cor)
+
+                if N == 1024:
+                    for query in n_1024_flat[i]:
+                        dates_split = query.split(', ')
+                        res = tuple(dates_split)
+
+                        est, cor = model_answers(FLAT_OLH, res)
+                        answers_flat.append(est)
+                        correct_answers_flat.append(cor)
+
+                    for query in n_1024_hh[i]:
+                        dates_split = query.split(', ')
+                        res = tuple(dates_split)
+                        est, cor = model_answers(FLAT_OLH, res)
+                        answers_hh.append(est)
+                        correct_answers_hh.append(cor)
+
+                if N == 2048:
+                    for query in n_2048_flat[i]:
+                        dates_split = query.split(', ')
+                        res = tuple(dates_split)
+
+                        est, cor = model_answers(FLAT_OLH, res)
+                        answers_flat.append(est)
+                        correct_answers_flat.append(cor)
+
+                    for query in n_2048_hh[i]:
+                        dates_split = query.split(', ')
+                        res = tuple(dates_split)
+
+                        est, cor = model_answers(FLAT_OLH, res)
+                        answers_hh.append(est)
+                        correct_answers_hh.append(cor)
+
+
+                        
+            np.savetxt(csv_name_est_flat, answers_flat, delimiter=',')
+            np.savetxt(csv_name_cor_flat, correct_answers_flat, delimiter=',')
+
+            np.savetxt(csv_name_est_hh, answers_hh, delimiter=',')
+            np.savetxt(csv_name_cor_hh, correct_answers_hh, delimiter=',')
         
-        for i in range(0,n_data_structures):
-            FLAT_OLH = OLH_flat(e, all_dates[:N], all_counts[:N])
-            
-            if N == 32:
-                for query in n_32_flat[i]:
-                    dates_split = query.split(', ')
-                    res = tuple(dates_split)
-
-                    est, cor = model_answers(FLAT_OLH, res)
-                    answers_flat.append(est)
-                    correct_answers_flat.append(cor)
-
-            if N == 128:
-                for query in n_128_flat[i]:
-
-                    dates_split = query.split(', ')
-                    res = tuple(dates_split)
-
-                    est, cor = model_answers(FLAT_OLH, res)
-                    answers_flat.append(est)
-                    correct_answers_flat.append(cor)
-
-                
-            if N == 256:
-                for query in n_32_flat[i]:
-                    dates_split = query.split(', ')
-                    res = tuple(dates_split)
-                    est, cor = model_answers(FLAT_OLH, res)
-                    answers_flat.append(est)
-                    correct_answers_flat.append(cor)             
-
-            if N == 512:
-                for query in n_512_flat[i]:
-                    dates_split = query.split(', ')
-                    res = tuple(dates_split)
-
-                    est, cor = model_answers(FLAT_OLH, res)
-                    answers_flat.append(est)
-                    correct_answers_flat.append(cor)
-                
-                for query in n_512_hh[i]:
-                    dates_split = query.split(', ')
-                    res = tuple(dates_split)
-                    
-                    est, cor = model_answers(FLAT_OLH, res)
-                    answers_hh.append(est)
-                    correct_answers_hh.append(cor)
-
-            if N == 1024:
-                for query in n_1024_flat[i]:
-                    dates_split = query.split(', ')
-                    res = tuple(dates_split)
-
-                    est, cor = model_answers(FLAT_OLH, res)
-                    answers_flat.append(est)
-                    correct_answers_flat.append(cor)
-                
-                for query in n_1024_hh[i]:
-                    dates_split = query.split(', ')
-                    res = tuple(dates_split)
-                    est, cor = model_answers(FLAT_OLH, res)
-                    answers_hh.append(est)
-                    correct_answers_hh.append(cor)
-
-            if N == 2048:
-                for query in n_2048_flat[i]:
-                    dates_split = query.split(', ')
-                    res = tuple(dates_split)
-
-                    est, cor = model_answers(FLAT_OLH, res)
-                    answers_flat.append(est)
-                    correct_answers_flat.append(cor)
-                
-                for query in n_2048_hh[i]:
-                    dates_split = query.split(', ')
-                    res = tuple(dates_split)
-
-                    est, cor = model_answers(FLAT_OLH, res)
-                    answers_hh.append(est)
-                    correct_answers_hh.append(cor)
-            
-            
-        np.savetxt(csv_name_est_flat, answers_flat, delimiter=',')
-        np.savetxt(csv_name_cor_flat, correct_answers_flat, delimiter=',')
-        
-        np.savetxt(csv_name_est_hh, answers_hh, delimiter=',')
-        np.savetxt(csv_name_cor_hh, correct_answers_hh, delimiter=',')
