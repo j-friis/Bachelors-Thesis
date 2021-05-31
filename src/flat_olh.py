@@ -70,7 +70,6 @@ class OLH_flat:
     
     def OLH_func(self, x, g):
         if np.random.uniform(0,1) < np.exp(self.epsilon)/(np.exp(self.epsilon)+g-1):
-            #print('if')
             return x
         else:
             return np.random.randint(low = 0, high = g)
