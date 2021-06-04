@@ -62,8 +62,8 @@ class HH_OLH_degree:
         """
         zip_iterator = zip(old_dates, old_counts)
         missing_dict =  dict(zip_iterator)
-        all_counts = np.zeros(len(self.dates))
-        for i, date in enumerate(self.dates):
+        all_counts = np.zeros(len(self.all_dates))
+        for i, date in enumerate(self.all_dates):
             val = missing_dict.get(date, 0)
             all_counts[i] = val
             
@@ -229,7 +229,11 @@ class HH_OLH_degree:
         range_count = 0.0
         
         #Starting in 0
-        if idx_0 == 0:
+        if idx_0 == 0 and idx_1 == np.max(np.fromiter(self.idx_dict.values(), dtype = int)):
+            node = self.tree_levels[0]
+            range_count = self.OLH_aggre(node, np.sum(self.tree_levels[0]), 1)
+        
+        elif idx_0 == 0:
             level_offset = 1
 
             for i in range(len(left_or_right_list_rightside)):
