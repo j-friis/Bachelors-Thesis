@@ -21,7 +21,6 @@ class OLH_flat:
         self.all_counts = counts
         
         if len(dates) < (dates[-1]-dates[0]).days:
-            print('here')
             self.all_dates = self.__add_missing_dates(dates)
             self.all_counts = self.__add_missing_counts(counts,dates)
             
@@ -34,7 +33,6 @@ class OLH_flat:
         #Check if we are we have missing dates.
         
         self.p = np.exp(self.epsilon)/(np.exp(self.epsilon)+len(self.all_dates)-1)
-        self.var = self.OLH_var(self.p, len(self.all_dates))
         
     def __add_missing_dates(self, old_dates):
         """Add missing dates in a list
@@ -47,9 +45,6 @@ class OLH_flat:
         end_date = old_dates[-1]
         all_dates = pd.date_range(start = start_date, end = end_date).to_pydatetime().tolist()
         return [(date.date()) for date in all_dates]
-    
-    def OLH_var(self, p, N):
-        return 4*p*(1-p)/(N*(2*p-1)**2)
     
     def __add_missing_counts(self, old_counts, old_dates):
         """Adds 0 to the list of counts where there was missing dates
@@ -76,15 +71,7 @@ class OLH_flat:
     
     def OLH_aggre(self, count, N, g):
         p = np.exp(self.epsilon)/(np.exp(self.epsilon)+g-1)
-        #print(p - 1/g)
-        #print(f'p = {p}')
         return (count - (1-p)*N/g) / (p)
-
-    def OLH_answer(self, count, N, g):
-        p = np.exp(self.epsilon)/(np.exp(self.epsilon)+g-1)
-        #print(p - 1/g)
-        #print(f'p = {p}')
-        return (count- N/g) / (p)
 
     def __process(self, dates, counts):
         OLH_count = np.zeros(len(counts))
@@ -114,7 +101,7 @@ class OLH_flat:
 
             idx = self.idx_dict[date_obj_0]
             noise_count = self.noise_counts[idx]
-            return self.OLH_answer(noise_count, N, D)
+            return self.OLH_aggre(noise_count, N, D)
             
         else:
             date_obj_0 = datetime.strptime(dates[0],'%Y-%m-%d').date()
