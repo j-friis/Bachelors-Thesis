@@ -1,18 +1,8 @@
 import numpy as np
 import pandas as pd
-from psql_functions import execQuery
-
-from miss_data import add_missing_dates, add_missing_counts
 
 from datetime import timedelta  
 
-param_dic = {
-    "host"      : "localhost",
-    "database"  : "bachelorBesoeg2014",
-    "user"      : "postgres",
-    "password"  : "password",
-    "port"      : "5432"
-}
 
 def load_range_queries(file):
     return pd.read_csv(file, sep=',',header=None).to_numpy().flatten()
