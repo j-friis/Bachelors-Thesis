@@ -2,6 +2,11 @@ import numpy as np
 import pandas as pd
 from psql_functions import execQuery
 
+
+np.random.seed(42)
+
+from sample_range_query import sample_range_query
+
 from miss_data import add_missing_dates, add_missing_counts
 
 from datetime import timedelta  
@@ -32,28 +37,6 @@ hh_degree_4 = np.array([200,300,300,350])
 flat_degree_2 = np.array([4, 7, 22, 32, 42, 62])
 flat_degree_3 = np.array([5, 8, 23, 33, 43, 63])
 flat_degree_4 = np.array([6, 9, 24, 35, 44, 64])
-
-def load_range_queries(file):
-    return pd.read_csv(file, sep=',',header=None).to_numpy().flatten()
-
-def load_range_queries_n_split(file, n_structures):
-    all_queries = pd.read_csv(file, sep='\n',header=None).to_numpy().flatten()
-    split_queries = np.array_split(all_queries, n_structures)
-    return split_queries
-
-def myfunc_dis(x, b):
-    return 2*b*int(np.ceil(np.log(x) / np.log(b)))**2
-
-def sample_range_query(length, dates):
-    """
-    Samples two dates of with distance of lenght
-    """
-    while True:
-        start_date_idx = np.random.randint((dates[-1]-dates[0]).days+1)
-        start_date = dates[start_date_idx]
-        end_date = dates[start_date_idx] + timedelta(days=(int(length-1)))
-        if dates[-1] > end_date:
-            return (str(start_date), str(end_date))
 
 query = """select time_ from _775147;"""
 result = execQuery(param_dic, query)
@@ -112,3 +95,31 @@ for idx, N in enumerate(flat_ns):
         qurries.append(sample_range_query(length_array[idx],all_dates[:N]))
 
     np.savetxt(csv_name, qurries, delimiter=';', fmt='%s, %s')
+
+print('Range queries for experiments on flat')
+
+flat_r_32 =  np.array([2, 4, 8, 12, 16, 20, 24])
+flat_r_128 =  np.array([20, 40, 50, 60, 70, 80, 90])
+flat_r_256 =  np.array([40, 60, 80, 100, 140, 200, 220])
+flat_r_512 =  np.array([100, 150, 200, 250, 300, 400, 450])
+flat_r_1024 =  np.array([200, 300, 400, 500, 600, 800, 900])
+flat_r_2048 =  np.array([600, 800, 1000, 1250, 1500, 1700, 1800])
+
+rs =  [flat_r_32, flat_r_128, flat_r_256, flat_r_512, flat_r_1024, flat_r_2048]
+n_queries = 2500
+for idx, N in enumerate(flat_ns):
+    print(f'N = {N}')
+    length_array = rs[idx]
+    #print(length_array)
+    #print(len(length_array))
+    
+    for idx, r in enumerate(length_array):
+        print(f'N = {N} and r = {r}')
+        csv_name = 'range_queries/flat_varying_r/' + f'flat_N={N}_r={r}.csv'
+        queries = []
+        
+        for i in range(0, n_queries):
+            queries.append(sample_range_query(length_array[idx],all_dates[:N]))
+            
+        np.savetxt(csv_name, queries, delimiter=';', fmt='%s, %s')
+
