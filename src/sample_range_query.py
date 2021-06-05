@@ -4,11 +4,11 @@ import pandas as pd
 from datetime import timedelta  
 
 
-def load_range_queries(file):
-    return pd.read_csv(file, sep=',',header=None).to_numpy().flatten()
+def load_range_queries(path, file):
+    return pd.read_csv(path + file, sep=',',header=None).to_numpy().flatten()
 
-def load_range_queries_n_split(file, n_structures):
-    all_queries = pd.read_csv(file, sep='\n',header=None).to_numpy().flatten()
+def load_range_queries_n_split(path, file, n_structures):
+    all_queries = pd.read_csv(path + file, sep='\n',header=None).to_numpy().flatten()
     split_queries = np.array_split(all_queries, n_structures)
     return split_queries
 
