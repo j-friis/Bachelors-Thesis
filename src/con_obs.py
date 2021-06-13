@@ -3,9 +3,14 @@ import pandas as pd
 from scipy.stats import laplace
 from datetime import datetime
 
-class cen_hh:
+import numpy as np
+import pandas as pd
+from scipy.stats import laplace
+from datetime import datetime
+
+class con_obs:
     
-    def __init__(self, epsilon, dates, counts, degree):
+    def __init__(self, epsilon, degree, dates, counts):
         """Setup of the datastructere
 
         Parameters:
@@ -23,11 +28,11 @@ class cen_hh:
         self.all_counts = counts
         #Check if we are we have missing dates.
         if len(dates) < (dates[-1]-dates[0]).days:  
-            self.all_dates = self.__add_missing_dates(dates)
-            self.all_counts = self.__add_missing_counts(counts,dates)
+            self.all_dates = self.__add_missing_dates(self.all_dates)
+            self.all_counts = self.__add_missing_counts(self.all_counts,dates)
         
-        self.all_dates = self.pad_dates(dates)
-        self.all_counts = self.pad_counts(counts)
+        self.all_dates = self.pad_dates(self.all_dates)
+        self.all_counts = self.pad_counts(self.all_counts)
         
         #Make dict for date indexing
         values = np.arange(0,len(self.all_dates))
@@ -41,10 +46,11 @@ class cen_hh:
             
         # The height of the "adic tree"
         self.n_layers = int(np.log(self.T)/np.log(self.degree))
-        
+        self.h = int(np.ceil(np.log(len(self.all_dates)) / np.log(degree)))
+
         # Get laplace for each node
         self.laplaces = self.init_laplace()
-        self.histogram = self.build_histogram(self.all_counts)
+        self.histogram = self.build_histogram()
         self.tree_levels = self.__process(self.all_counts)
     
     def init_laplace(self):
@@ -56,21 +62,28 @@ class cen_hh:
             rvs = laplace(scale=self.zeta).rvs(int(self.degree**np.ceil(i)))
             laplaces.append(rvs)
         
+        for i in np.arange(0,self.T-1):
+            for j in np.arange(0,len(laplaces[i])):
+                
+                ch1, ch2 = self.get_children(j,i)
+                laplaces[i+1][ch1] = laplaces[i+1][ch1] + laplaces[i][j]
+                laplaces[i+1][ch1] = laplaces[i+1][ch2] + laplaces[i][j]
+        
         return laplaces
     
-    def build_histogram(self, counts):
+    def build_histogram(self):
         #print(counts)
         #print(get_group(counts,degree))
         tree = []
-        left = counts
-        for level in range(0, int(np.ceil(np.log(len(counts)) / np.log(self.degree)))):
+        left = self.all_counts
+        for level in np.arange(0,self.T):
             split_ratio = self.degree**level
-            left = np.array_split(counts, split_ratio)
+            left = np.array_split(self.all_counts, split_ratio)
 
             sums = [np.sum(a) for a in left]
             tree.append(sums)
                      
-        tree.append(counts)
+        tree.append(self.all_counts)
         return tree   
         
     def __add_missing_dates(self, old_dates):
@@ -122,8 +135,23 @@ class cen_hh:
         return new_dates
     
     def __process(self, counts):
+        """
+        def __process(self, counts):
+               
+            noise_counts = np.zeros(len(self.dates))
+            for idx, date_count in enumerate(counts):
+                indices = self.get_index(idx,self.n_layers)
+                indices.reverse()
+                laplace_sum = 0.0
+                for laplace_idx, laplace_row in enumerate(self.laplaces):
+                    laplace_sum = laplace_sum + laplace_row[indices[laplace_idx]]
+                noise_counts[idx] = date_count  +  noise_counts[idx-1] + laplace_sum
+            return noise_counts
+        
+        """
         hh = []
         for i in range(0,len(self.laplaces)):
+
             level = self.laplaces[i] + self.histogram[i]
             hh.append(level)
         return hh  
@@ -138,15 +166,33 @@ class cen_hh:
 
         Returns:
         list: of index in the path from the starting from the bottom and going up
+
         """
         idx = []
-        for i in np.arange(0,n_layers):
+        for i in np.arange(0,self.h):
             if i == 0:
                 idx.append(int(date_idx))
             else:
-                idx.append(int(idx[i-1]//2))
+                idx.append(int(idx[i-1]//self.degree))
         idx.append(0)
         return idx
+    
+    def get_children(self, idx, level):
+        """Calculates the path of index in full binary string
+
+        Parameters:
+        date_idx (int): The node in the bouttom layer we want to calculate a path to. 
+        The bottom layer has index from 0 to 2**h-1
+        n_layers (int): The height of the full binary tree. 0 index
+
+        Returns:
+        list: of index in the path from the starting from the bottom and going up
+
+        """
+        child_1 = idx*self.degree
+        child_2 = idx*self.degree + 1
+
+        return child_1, child_2
     
     def get_group(self, idx, level):
         """Calculates the path of index in full binary string
@@ -161,57 +207,63 @@ class cen_hh:
 
         """
         if level == 0:
-            return 0
+            return id
+        elif idx == 0:
+            return np.arange(0,self.degree)
         else:
             group_index = idx //self.degree
             level_indicis = np.arange(0,self.degree**level)
 
             split_ratio = (len(level_indicis) // self.degree)
             level_indicis_split = np.array_split(level_indicis, split_ratio)
-
+            
             return level_indicis_split[group_index]
     
     def turns_right(self, path):
         #0 is left 1 is right
         direction_lst = []
         for i in range(len(path)-1):
+            #print(f'i = {i}')
             current = path[i]
             nxt = path[i+1]
+
             if nxt == 0:
                 #We went left
                 direction_lst.append(0)
-            elif current == 0 and current < nxt:
-                #We went right
-                direction_lst.append(1)
-            elif self.degree * current < nxt:
-                #We went right
-                direction_lst.append(1)
-            else:
-                #print('else')            
-                direction_lst.append(0)
 
+            elif nxt == current*self.degree + self.degree - 1:
+                #We went right
+                direction_lst.append(1)
+
+            else: 
+                direction_lst.append(0)
+            
         return direction_lst
+
 
     def turns_left(self, path):
         #0 is left 1 is right
         direction_lst = []
         for i in range(len(path)-1):
+            #print(f'i = {i}')
             current = path[i]
             nxt = path[i+1]
+
             #Checks
             if nxt == 0:
                 #We went left
-                direction_lst.append(0)
-            #Checks
-            elif nxt == current*self.degree + self.degree - 1:
-                #We went right
                 direction_lst.append(1)
+            #Checks
             elif current == 0 and current < nxt:
+                #We went right
+                direction_lst.append(0)
+            elif nxt == self.degree * current:
                 #We went left
-                direction_lst.append(0)
+                direction_lst.append(1)
             else:
+                #We went right
                 direction_lst.append(0)
-
+            
         return direction_lst
     
     def answer(self, dates):
@@ -223,75 +275,69 @@ class cen_hh:
         Returns:
         float: The private range count
         """
-        print('_____________')
-        print(dates)
-        print(type(dates))
-        
+            
         date_obj_0 = datetime.strptime(dates[0],'%Y-%m-%d').date()
         date_obj_1 = datetime.strptime(dates[1],'%Y-%m-%d').date()
-
 
         idx_0 = self.idx_dict[date_obj_0]
         idx_1 = self.idx_dict[date_obj_1]
         
-        #print(idx_0)
-        #print(idx_1)
         idx_left = idx_0-1
         idx_right = idx_1+1
         
-        path_to_left = np.flip(np.array(self.get_index(idx_left,self.T)))
-        path_to_right = np.flip(np.array(self.get_index(idx_right,self.T)))
+        path_to_left = np.flip(np.array(self.get_index(idx_left,self.h+1)))
+        path_to_right = np.flip(np.array(self.get_index(idx_right,self.h+1)))
         
-        left_or_right_list_leftside = self.turns_left(path_to_left)
-        left_or_right_list_rightside = self.turns_right(path_to_right)
-        #Starting in 0
-        
+        turns_left_lst = self.turns_left(path_to_right)
+        turns_right_lst = self.turns_right(path_to_left)
+
         range_count = 0.0
-        
+         
         if idx_0 == 0 and idx_1 == np.max(np.fromiter(self.idx_dict.values(), dtype = int)):
             node = self.tree_levels[0]
             range_count = node
-            
+        
         elif idx_0 == 0:
-            level_offset = 1
-            #print(f'level_offset = {level_offset}')
 
-            for i in range(len(left_or_right_list_rightside)):
-                if left_or_right_list_rightside[i] == 1:
+            level_offset = 1
+
+            for i in range(len(turns_left_lst)):
+
+                if turns_left_lst[i] == 0:
                     group = self.get_group(path_to_right[i+level_offset], i+level_offset)
                     idx_sss = np.where(group == path_to_right[i+level_offset])[0][0]
 
                     count_nodes = self.tree_levels[i+level_offset][group[:idx_sss]]
+                    
                     for node in count_nodes:
-                        #print(node)
                         range_count = range_count + node
-    
+
         elif idx_1 == np.max(np.fromiter(self.idx_dict.values(), dtype = int)):
-            #print('MAX')
             
             level_offset = 1
-            #print(f'level_offset = {level_offset}')
-
-            for i in range(len(left_or_right_list_leftside)):
-                if left_or_right_list_leftside[i] == 0:
+            
+            for i in range(len(turns_right_lst)):
+                if turns_right_lst[i] == 0:
 
                     group = self.get_group(path_to_left[i+level_offset], i+level_offset)
                     idx_sss = np.where(group == path_to_left[i+level_offset])[0][0]
 
                     count_nodes = self.tree_levels[i+level_offset][group[idx_sss+1:]]
                     for node in count_nodes:
-                        #print(node)
-                        range_count = range_count + node
-                    
+                        range_count = range_count + node          
                     
         else:
+            
             level_offset = 1
-            #print(f'level_offset = {level_offset}')
             left_count = []
             left_count_group = []
 
-            for i in range(len(left_or_right_list_rightside)):
-                if left_or_right_list_rightside[i] == 1:
+            level_offset = 1
+            left_count = []
+            left_count_group = []
+
+            for i in range(len(turns_left_lst)):
+                if turns_left_lst[i] == 0:
                     group = self.get_group(path_to_right[i+level_offset], i+level_offset)
                     idx_sss = np.where(group == path_to_right[i+level_offset])[0][0]
 
@@ -308,8 +354,8 @@ class cen_hh:
             right_count = []
             right_count_group = []
 
-            for i in range(len(left_or_right_list_leftside)):
-                if left_or_right_list_leftside[i] == 0:
+            for i in range(len(turns_right_lst)):
+                if turns_right_lst[i] == 0:
 
                     group = self.get_group(path_to_left[i+level_offset], i+level_offset)
                     idx_sss = np.where(group == path_to_left[i+level_offset])[0][0]
@@ -322,54 +368,37 @@ class cen_hh:
                 else:
                     right_count_group.append(np.array([]))
                     right_count.append(np.array([]))
-
-            #print('Counting nodes')
-            #print(left_count)
-            #print(right_count)
+            
             for i in range(len(left_count_group)):
-                #print(f'At level {level_offset + i}')
-                """
-                print('Left size')
-                print(left_count_group[i].size)
-                print('right size')
-                print(right_count_group[i].size)
-                """
                 if left_count_group[i].size != 0 and right_count_group[i].size != 0:
-                    #print('Both not zero')
+                    #Both not zero
                     group_left = self.get_group(left_count_group[i][0], i+ level_offset)
                     group_right = self.get_group(right_count_group[i][0], i+ level_offset)
 
                     if not (np.array_equal(group_left,group_right)):
-                        for node in left_count_group[i]:
-                            range_count = range_count + node
-                            #print(node)
-                        for node in right_count_group[i]:
-                            range_count = range_count +node
-                            #print(node)
+                        for node in left_count_group[i]:       
+                            range_count = range_count + self.tree_levels[i+level_offset][node]
+
+                        for node in right_count_group[i]:                            
+                            range_count = range_count + self.tree_levels[i+level_offset][node]
+
                     else:
-                        #print(left_count_group[i])
-                        #print(right_count_group[i])
-                        #print(np.intersect1d(left_count_group[i], right_count_group[i]))
                         count_nodes = np.intersect1d(left_count_group[i], right_count_group[i])
-                        for node in count_nodes:
-                            range_count = range_count + node
-                            #print(node)
+                        for node in count_nodes:                            
+                            range_count = range_count + self.tree_levels[i+level_offset][node]
 
                 if left_count_group[i].size != 0 and right_count_group[i].size == 0:
-                    #print('Left not zero')
+                    #Left not zero
                     for node in left_count_group[i]:
-                        range_count = range_count + node
-                        #print(node)
-                if right_count_group[i].size != 0 and left_count_group[i].size == 0:
-                    #print('Right not zero')
-                    for node in right_count_group[i]:
-                        #print(node) 
-                        range_count = range_count +node
+                        if path_to_left[i] != path_to_right[i]:                            
+                            range_count = range_count + self.tree_levels[i+level_offset][node]
 
-                    #print(OLH_answer(count, epsilon, np.sum(OLH_count), D))
-                    #D = len(all_dates) 
+                if right_count_group[i].size != 0 and left_count_group[i].size == 0:
+                    #Right not zero
+                    for node in right_count_group[i]:
+                        if path_to_left[i] != path_to_right[i]:
+                            range_count = range_count + self.tree_levels[i+level_offset][node]
         return range_count 
-            
         
     def real_answer(self, dates):
         if len(dates) < 2:
@@ -379,8 +408,6 @@ class cen_hh:
             date_obj_0 = datetime.strptime(dates[0],'%Y-%m-%d').date()
             date_obj_1 = datetime.strptime(dates[1],'%Y-%m-%d').date()
             sum_ = np.sum(self.all_counts[self.idx_dict[date_obj_0]: self.idx_dict[date_obj_1]+1])  
-            return sum_
-
-        
+            return sum_        
         
 

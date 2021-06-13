@@ -20,19 +20,22 @@ param_dic = {
 }
 
 hh_ns = np.array([256,512,1024,2048])
-degrees = np.array([2,3,4])
+hh_degrees = np.array([2,3,4])
 
-n_queries = 5000
+n_queries = 2500
 
 #[100 196 256 324 400 484]
-#[ 256 324 400 484]
-hh_degree_2 = np.array([44,400,450,512])
+#[ 256, 324, 400, 484]
+#[44,400,450,512]
+hh_degree_2 = np.array([44, 324, 400, 484])
 #[ 96 150 216 216 294 294]
-#[ 216 216 294 294]
-hh_degree_3 = np.array([230,300,500,800])
+#[ 216, 216, 294, 294]
+#[230,300,500,800]
+hh_degree_3 = np.array([ 216, 216, 294, 294])
 #[ 72 128 128 200 200 288]
-#[ 128 200 200 288]
-hh_degree_4 = np.array([200,300,300,350])
+#[ 128, 200, 200, 288]
+#[200,300,300,350]
+hh_degree_4 = np.array([ 128, 200, 200, 288])
 
 flat_degree_2 = np.array([4, 7, 22, 32, 42, 62])
 flat_degree_3 = np.array([5, 8, 23, 33, 43, 63])
@@ -51,17 +54,17 @@ all_dates = add_missing_dates(dates)
 all_counts =  add_missing_counts(counts, dates, all_dates)
 
 for idx, N in enumerate(hh_ns):
-    for degree in degrees:
+    for degree in hh_degrees:
         print(f'N = {N} and degree = {degree}')
         if degree == 2:
             length_array = hh_degree_2
-            csv_name = 'range_queries/local_hh/' + f'hh_N={N}_B={degree}_r={hh_degree_2[idx]}.csv'
+            csv_name = 'range_queries/hh/' + f'hh_N={N}_B={degree}_r={hh_degree_2[idx]}.csv'
         elif degree== 3:
             length_array = hh_degree_3
-            csv_name = 'range_queries/local_hh/' + f'hh_N={N}_B={degree}_r={hh_degree_3[idx]}.csv'
+            csv_name = 'range_queries/hh/' + f'hh_N={N}_B={degree}_r={hh_degree_3[idx]}.csv'
         elif degree== 4:
             length_array = hh_degree_4
-            csv_name = 'range_queries/local_hh/' + f'hh_N={N}_B={degree}_r={hh_degree_4[idx]}.csv'
+            csv_name = 'range_queries/hh/' + f'hh_N={N}_B={degree}_r={hh_degree_4[idx]}.csv'
     
         qurries = []
 
@@ -123,3 +126,24 @@ for idx, N in enumerate(flat_ns):
             
         np.savetxt(csv_name, queries, delimiter=';', fmt='%s, %s')
 
+"""
+con_ns = np.array([32,128,256,512,1024,2048])
+con_degrees = np.array([2,3,4])
+n_queries = 5000
+
+con_degree_r = np.array([10, 30, 100, 200, 400, 600])
+
+for idx, N in enumerate(con_ns):
+    for degree in con_degrees:
+        print(f'N = {N} and degree = {degree}')
+
+        csv_name = 'range_queries/con_obs/' + f'con_obs_N={N}_B={degree}_r={con_degree_r[idx]}.csv'
+    
+        queries = []
+
+        for i in range(0, n_queries):
+            
+            queries.append(sample_range_query(con_degree_r[idx],all_dates[:N]))
+
+        np.savetxt(csv_name, queries, delimiter=';', fmt='%s, %s')
+"""
