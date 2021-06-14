@@ -32,7 +32,7 @@ def execRangeQuery(params_dic,dates):
         if(connection):
             cursor.close()
             connection.close()
-            print("Executed query and closed connection.")
+            #print("Executed query and closed connection.")
 
 def execQuery(params_dic,query):
     try:
@@ -48,4 +48,4 @@ def execQuery(params_dic,query):
         if(connection):
             cursor.close()
             connection.close()
-            print("Executed query and closed connection.")
+            #print("Executed query and closed connection.")

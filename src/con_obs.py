@@ -3,11 +3,6 @@ import pandas as pd
 from scipy.stats import laplace
 from datetime import datetime
 
-import numpy as np
-import pandas as pd
-from scipy.stats import laplace
-from datetime import datetime
-
 class con_obs:
     
     def __init__(self, epsilon, degree, dates, counts):
