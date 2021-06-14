@@ -1,29 +1,17 @@
 import unittest
 
 import numpy as np
+import pandas as pd
 
-from psql_functions import execQuery
-from miss_data import add_missing_dates, add_missing_counts
+from datetime import date
+from datetime import timedelta  
 
-param_dic = {
-    "host"      : "localhost",
-    "database"  : "bachelorBesoeg2014",
-    "user"      : "postgres",
-    "password"  : "password",
-    "port"      : "5432"
-}
+today = date.today()
 
-query = """select time_ from _775147;"""
-result = execQuery(param_dic, query)
-dates = [(date[0]) for date in result]
-
-query = """select count_ from _775147;"""
-result = execQuery(param_dic, query)
-
-counts = [(count[0]) for count in result]
-
-data_dates = add_missing_dates(dates)
-data_counts =  add_missing_counts(counts, dates, data_dates)
+start_date = today
+all_dates = pd.date_range(start = start_date, periods = 512).to_pydatetime().tolist()
+data_dates =  [(date.date()) for date in all_dates]
+data_counts = np.ones(512)
 
 from con_obs import con_obs
 
@@ -71,7 +59,7 @@ class test_con_obs(unittest.TestCase):
             self.assertEqual(len(model.tree_levels[3]), 64)
 
     def test_histogram(self):
-            model = con_obs(1.0, 2, data_dates[:32], np.ones(32))
+            model = con_obs(1.0, 2, data_dates[:32], data_counts[:32] )
             self.assertEqual(sum(model.histogram[0]), 32)
             self.assertEqual(sum(model.histogram[1]), 32)
             self.assertEqual(sum(model.histogram[2]), 32)
@@ -140,7 +128,7 @@ class test_con_obs(unittest.TestCase):
 
     def test_real_answer(self):
             model = con_obs(1.0, 2, data_dates[:28], data_counts[:28])
-            self.assertAlmostEqual(model.real_answer(('2014-01-2','2014-1-2')), 239.0)
+            self.assertAlmostEqual(model.real_answer((str(today),str(today+ timedelta(days=1) ))), 2)
             
 
 if __name__ == '__main__':

@@ -1,27 +1,17 @@
 import unittest
 
-from psql_functions import execQuery
-from miss_data import add_missing_dates, add_missing_counts
+import numpy as np
+import pandas as pd
 
-param_dic = {
-    "host"      : "localhost",
-    "database"  : "bachelorBesoeg2014",
-    "user"      : "postgres",
-    "password"  : "password",
-    "port"      : "5432"
-}
+from datetime import date
+from datetime import timedelta  
 
-query = """select time_ from _775147;"""
-result = execQuery(param_dic, query)
-dates = [(date[0]) for date in result]
+today = date.today()
 
-query = """select count_ from _775147;"""
-result = execQuery(param_dic, query)
-
-counts = [(count[0]) for count in result]
-
-data_dates = add_missing_dates(dates)
-data_counts =  add_missing_counts(counts, dates, data_dates)
+start_date = today
+all_dates = pd.date_range(start = start_date, periods = 512).to_pydatetime().tolist()
+data_dates =  [(date.date()) for date in all_dates]
+data_counts = np.ones(512)
 
 from local_hh import HH_OLH
 
@@ -91,7 +81,7 @@ class test_con_obs(unittest.TestCase):
 
     def test_real_answer(self):
             model = HH_OLH(1.0, 2, data_dates[:28], data_counts[:28])
-            self.assertAlmostEqual(model.real_answer(('2014-01-2','2014-1-2')), 239.0)
+            self.assertAlmostEqual(model.real_answer((str(today),str(today+ timedelta(days=1) ))), 2)
 
 
 
