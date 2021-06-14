@@ -5,7 +5,7 @@
 \usepackage{amsmath}
 \usepackage{tabto}
 \usepackage{amsthm}
-\usepackage{hyperref}
+\usepackage[hidelinks]{hyperref}
 \usepackage{xurl}
 \usepackage{enumerate}
 \usepackage{txfonts}
@@ -792,7 +792,7 @@ In the local case only for $N=32$, the local flat solution beats the local hiera
 \end{figure}
 
 
-\subsubsection{Hierarchical histogram solutions beating flat solutions}
+\subsubsection{Hierarchical histogram solutions beating the flat solutions}
 Here we present the results for when the flat solutions should beat hierarchical histogram solutions in both local and central differential privacy models. We have chosen to present six plots, three for both the local and central solutions. As all the plots show the same tendencies, there is no reason to look at them all. I have chosen to look at we domain sizes $N\in[256,512,2048]$ all with degree $B=4$; this means the length of the queries would be $N\in[128, 200, 288]$ respectively for the domain sizes. The RMSE value for the queries of a specific length is plotted over the eight different epsilon values in the plots. $\epsilon$ takes the values $\epsilon\in[2, 1.4, 1.2, 1, 0.8, 0.6, 0.4, 0.2]$.  The plots for the central models can be seen in figure \ref{fig:cen_hh_flat}. The plots for the local models can be seen in figure \ref{fig:loc_hh_flat}. We can clearly see that the hierarchical histogram solutions beat flat solutions as expected. The margin is not that wide with the central models, where the margin for the local models is far more extensive. We would assume this gap to get bigger the longer the ranges become.
 \begin{figure}[H]
 \centering
