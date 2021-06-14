@@ -117,7 +117,7 @@ class HH_OLH:
 
         """
         if level == 0:
-            return id
+            return idx
         elif idx == 0:
             return np.arange(0,self.degree)
         else:
